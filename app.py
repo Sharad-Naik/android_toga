@@ -1,7 +1,7 @@
 import toga
 import datetime
-from .sub import add_numbers
 from toga.style import Pack
+from .sub import add_numbers
 from toga.style.pack import COLUMN, ROW
 
 
@@ -10,13 +10,14 @@ class bumblebee(toga.App):
         super().__init__(*args, **kwargs)
         self.number_text = toga.TextInput(readonly=True, initial='')
         self.result_text = toga.TextInput(readonly=True, initial='')
-        self.time_label = toga.Label('Time')
+        self.time_label = toga.Label(datetime.datetime.now().strftime('%H:%M:%S'))
 
     def update_label_text(self):
         # Update the label text with the current time
         current_time = datetime.datetime.now().strftime('%H:%M:%S')
         self.time_label.text = f'Current Time: {current_time}'
-        
+        #threading.Event().wait(1)
+
     def run_python_script(self, widget):
         # Call the function from myscript and capture its output
         result = add_numbers(5, 8)
@@ -26,7 +27,8 @@ class bumblebee(toga.App):
 
     def say_hi(self, widget):
         # Update the text in the text field to show number 23
-        self.number_text.value = '23'
+        self.update_label_text()
+        self.number_text.value = self.time_label.text
 
     def startup(self):
         """
@@ -47,12 +49,19 @@ class bumblebee(toga.App):
         main_box.add(button_run_script)
 
         # Add a button to the main_box
-        button = toga.Button('Say Hi', on_press=self.say_hi)
+        button = toga.Button('Time', on_press=self.say_hi)
         main_box.add(button)
 
         self.main_window = toga.MainWindow(title=self.formal_name)
         self.main_window.content = main_box
+
+        # Start a separate thread to update the label text continuously
+        #thread = threading.Thread(target=self.update_label_text)
+        #thread.daemon = True  # Make the thread a daemon, so it terminates with the main process
+        #thread.start()
+
         self.main_window.show()
+
 
 
 def main():
