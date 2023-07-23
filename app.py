@@ -1,5 +1,6 @@
 import toga
 import datetime
+import threading
 from toga.style import Pack
 from .sub import add_numbers
 from toga.style.pack import COLUMN, ROW
@@ -11,12 +12,18 @@ class bumblebee(toga.App):
         self.number_text = toga.TextInput(readonly=True, initial='')
         self.result_text = toga.TextInput(readonly=True, initial='')
         self.time_label = toga.Label(datetime.datetime.now().strftime('%H:%M:%S'))
+        self.should_update = True
+        self.update_thread = threading.Thread(target=self.update_label_text)
+
 
     def update_label_text(self):
-        # Update the label text with the current time
-        current_time = datetime.datetime.now().strftime('%H:%M:%S')
-        self.time_label.text = f'Current Time: {current_time}'
-        #threading.Event().wait(1)
+        while self.should_update:
+            # Update the label text with the current time
+            current_time = datetime.datetime.now().strftime('%H:%M:%S')
+            self.label.text = f'Current Time: {current_time}'
+            # Sleep for 1 second
+            threading.Event().wait(1)
+
 
     def run_python_script(self, widget):
         # Call the function from myscript and capture its output
@@ -56,11 +63,14 @@ class bumblebee(toga.App):
         self.main_window.content = main_box
 
         # Start a separate thread to update the label text continuously
-        #thread = threading.Thread(target=self.update_label_text)
-        #thread.daemon = True  # Make the thread a daemon, so it terminates with the main process
-        #thread.start()
+        self.update_thread.start()
 
         self.main_window.show()
+        
+    def shutdown(self):
+        # Stop the background thread when the app is closed
+        self.should_update = False
+        self.update_thread.join()
 
 
 
